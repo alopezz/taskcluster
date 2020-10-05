@@ -962,6 +962,10 @@ builder.declare({
     'credentials for authentication. This way we can use Hawk without having',
     'the secret credentials leave this service.',
   ].join('\n'),
+  // This API method should _not_ require scope `service:auth:authenticateHawk`
+  // due to the chicken-and-egg problem this would introduce. This is the only
+  // API method that should have this set to false (at time of writing).
+  implicitServiceScopes: false,
 }, function(req, res) {
   return this.signatureValidator(req.body).then(result => {
     if (result.expires) {
