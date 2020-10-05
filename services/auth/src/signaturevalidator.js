@@ -137,9 +137,9 @@ const limitClientWithExt = function(credentialName, issuingClientId, accessToken
       res.expires = cert_expires;
     }
 
-    let authorizedScopes = cert.scopes
-    // Implicitly grant restricted clients the anonymous scopes 
-    authorizedScopes.push('assume:anonymous')
+    let authorizedScopes = cert.scopes;
+    // Implicitly grant restricted clients the anonymous scopes
+    authorizedScopes.push('assume:anonymous');
     res.scopes = scopes = expandScopes(authorizedScopes);
   }
 
@@ -342,7 +342,7 @@ const createSignatureValidator = function(options) {
         result = {
           status: 'no-auth',
           scheme: 'none',
-          expires: new Date(Date.now() + 15*60*1000), // 15 minutes in future
+          expires: new Date(Date.now() + 15 * 60 * 1000), // 15 minutes in future
           scopes: expandScopes(['assume:annonymous']),
           clientId: credentials.clientId,
         };

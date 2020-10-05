@@ -123,7 +123,7 @@ class APIBuilder {
     }
     // Default to requiring `service:<serviceName>:<name>` scope
     if (!options.implicitServiceScopes) {
-      options.implicitServiceScopes = true
+      options.implicitServiceScopes = true;
     }
     assert(STABILITY_LEVELS.indexOf(options.stability) !== -1,
       'options.stability must be a valid stability-level, ' +
@@ -141,11 +141,11 @@ class APIBuilder {
       throw new Error(`Invalid scope expression template: ${JSON.stringify(options.scopes, null, 2)}`);
     }
     if (options.implicitServiceScopes) {
-      let serviceScope = "service:${this.serviceName}:${options.name}"
-      if options.scopes {
-        options.scopes = { AllOf: [options.scopes, serviceScope] }
+      let serviceScope = "service:${this.serviceName}:${options.name}";
+      if (options.scopes) {
+        options.scopes = { AllOf: [options.scopes, serviceScope] };
       } else {
-        options.scopes = serviceScope
+        options.scopes = serviceScope;
       }
     }
 
