@@ -137,10 +137,7 @@ const limitClientWithExt = function(credentialName, issuingClientId, accessToken
       res.expires = cert_expires;
     }
 
-    let authorizedScopes = cert.scopes;
-    // Implicitly grant restricted clients the anonymous scopes
-    authorizedScopes.push('assume:anonymous');
-    res.scopes = scopes = expandScopes(authorizedScopes);
+    scopes = cert.scopes;
   }
 
   // Handle scope restriction with authorizedScopes
@@ -170,9 +167,12 @@ const limitClientWithExt = function(credentialName, issuingClientId, accessToken
       ].join('\n'));
     }
 
-    // Further limit scopes
-    res.scopes = scopes = expandScopes(ext.authorizedScopes);
+    scopes = ext.authorizedScopes;
   }
+
+  // Implicitly grant restricted clients the anonymous role
+  scopes.push('assume:anonymous');
+  res.scopes = scopes = expandScopes(scopes);
 
   return res;
 };
