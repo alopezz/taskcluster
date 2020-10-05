@@ -137,7 +137,10 @@ const limitClientWithExt = function(credentialName, issuingClientId, accessToken
       res.expires = cert_expires;
     }
 
-    res.scopes = scopes = expandScopes(cert.scopes);
+    let authorizedScopes = cert.scopes
+    // Implicitly grant restricted clients the anonymous scopes 
+    authorizedScopes.push('assume:anonymous')
+    res.scopes = scopes = expandScopes(authorizedScopes);
   }
 
   // Handle scope restriction with authorizedScopes
@@ -211,6 +214,10 @@ const createSignatureValidator = function(options) {
     'options.expandScopes must be a function');
   assert(options.monitor, 'options.monitor must be provided');
   assert(!options.nonceManager, 'nonceManager is not supported');
+
+  const expandScopes = async (scopes) => {
+    return options.expandScopes(scopes);
+  };
 
   const loadCredentials = async (clientId, ext) => {
     // We may have two clientIds here: the credentialName (the one the caller
@@ -291,8 +298,8 @@ const createSignatureValidator = function(options) {
 
         credentials = authResult.credentials;
         attributes = authResult.artifacts; // Hawk uses "artifacts" and "attributes"
-      } else {
-        // If there is no authorization header we'll attempt a login with bewit
+      } else if (/^\/.*[\?&]bewit\=/.test(req.resource)) {
+        // Bewit present
         authResult = await hawk.uri.authenticate({
           method: req.method.toUpperCase(),
           url: req.resource,
@@ -330,9 +337,17 @@ const createSignatureValidator = function(options) {
 
         credentials = authResult.credentials;
         attributes = authResult.attributes;
+      } else {
+        // No auth provided
+        result = {
+          status: 'no-auth',
+          scheme: 'none',
+          expires: new Date(Date.now() + 15*60*1000), // 15 minutes in future
+          scopes: expandScopes(['assume:annonymous']),
+          clientId: credentials.clientId,
+        };
       }
-
-      result = {
+      result = result || {
         status: 'auth-success',
         scheme: 'hawk',
         expires: credentials.expires,

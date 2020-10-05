@@ -130,16 +130,6 @@ const remoteAuthentication = ({ signatureValidator, entry }) => {
       };
     }
 
-    // If no authentication is provided, we just return valid with zero scopes
-    if ((!req.query || !req.query.bewit) &&
-        (!req.headers || !req.headers.authorization)) {
-      return {
-        status: 'no-auth',
-        scheme: 'none',
-        scopes: [],
-      };
-    }
-
     // Parse host header
     const host = hawk.utils.parseHost(req);
     // Find port, overwrite if forwarded by reverse proxy
@@ -204,7 +194,7 @@ const remoteAuthentication = ({ signatureValidator, entry }) => {
       req.scopes = async () => {
         // This lint can be disabled because authenticate() will always return the same value
         result = await (result || authenticate(req)); // eslint-disable-line require-atomic-updates
-        if (result.status !== 'auth-success') {
+        if (result.status === 'auth-failed') {
           return [];
         }
         return result.scopes || [];

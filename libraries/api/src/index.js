@@ -82,9 +82,7 @@ class APIBuilder {
    *   },
    *   name:     'identifierForLibraries',         // identifier for client libraries
    *   stability: base.API.stability.experimental, // API stability level
-   *   scopes:   ['admin', 'superuser'],           // Scopes for the request
-   *   scopes:   [['admin'], ['per1', 'per2']],    // Scopes in disjunctive form
-   *                                               // admin OR (per1 AND per2)
+   *   scopes:   {AllOf: ['admin', 'superuser']},  // Scopes expression
    *   input:    'input-schema.yaml',              // optional, null if no input
    *   output:   'output-schema.yaml' || 'blob',   // optional, null if no output
    *   skipInputValidation:    true,               // defaults to false
@@ -98,6 +96,12 @@ class APIBuilder {
    *   ].join('\n'),
    *   cleanPayload: payload => payload,           // function to 'clean' the payload for
    *                                               // error messages (e.g., remove secrets)
+   *   implicitServiceScopes: false,               // defaults to true
+   *                                               // when true, the single scope
+   *                                               // 'service:<serviceName>:<name>'
+   *                                               // is required in addition to the scope
+   *                                               // expression specified in 'scopes' by
+   *                                               // the API method caller
    * }
    *
    * The handler parameter is a normal connect/express request handler, it should
@@ -117,6 +121,10 @@ class APIBuilder {
     if (!options.stability) {
       options.stability = stability.experimental;
     }
+    // Default to requiring `service:<serviceName>:<name>` scope
+    if (!options.implicitServiceScopes) {
+      options.implicitServiceScopes = true
+    }
     assert(STABILITY_LEVELS.indexOf(options.stability) !== -1,
       'options.stability must be a valid stability-level, ' +
            'see base.API.stability for valid options');
@@ -131,6 +139,14 @@ class APIBuilder {
       'deferAuth is deprecated! https://github.com/taskcluster/taskcluster-lib-api#request-handlers');
     if (options.scopes && !ScopeExpressionTemplate.validate(options.scopes)) {
       throw new Error(`Invalid scope expression template: ${JSON.stringify(options.scopes, null, 2)}`);
+    }
+    if options.implicitServiceScopes {
+      let serviceScope = "service:${this.serviceName}:${options.name}"
+      if options.scopes {
+        options.scopes = { AllOf: [options.scopes, serviceScope] }
+      } else {
+        options.scopes = serviceScope
+      }
     }
 
     assert(!(options.method === 'get' && options.input), "Can't have an `input` with method: 'get'");
