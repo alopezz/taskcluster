@@ -140,7 +140,7 @@ class APIBuilder {
     if (options.scopes && !ScopeExpressionTemplate.validate(options.scopes)) {
       throw new Error(`Invalid scope expression template: ${JSON.stringify(options.scopes, null, 2)}`);
     }
-    if options.implicitServiceScopes {
+    if (options.implicitServiceScopes) {
       let serviceScope = "service:${this.serviceName}:${options.name}"
       if options.scopes {
         options.scopes = { AllOf: [options.scopes, serviceScope] }
